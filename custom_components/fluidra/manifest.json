@@ -1,0 +1,12 @@
+{
+  "domain": "fluidra",
+  "name": "Fluidra",
+  "version": "0.1.0",
+  "documentation": "https://github.com/Math43/ha-fluidra",
+  "issue_tracker": "https://github.com/Math43/ha-fluidra/issues",
+  "requirements": ["boto3>=1.38.0"],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "codeowners": ["@Math43"],
+  "homeassistant": "2023.1.0"
+}

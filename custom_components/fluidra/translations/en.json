@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fluidra",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password",
+      "cannot_connect": "Cannot connect to Fluidra API",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Fluidra is already configured"
+    }
+  }
+}
