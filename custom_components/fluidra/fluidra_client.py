@@ -151,7 +151,7 @@ class FluidraClient:
             'value_power': raw.get('value_power'),
             'value_ph': raw['value_ph'] / 100 if 'value_ph' in raw else None,
             'value_water_temperature': raw['value_water_temperature'] / 10 if 'value_water_temperature' in raw else None,
-            'value_salinity': raw.get('value_salinity'),
+            'value_salinity': raw['value_salinity'] / 100 if 'value_salinity' in raw else None,
         }
 
     async def close(self):
