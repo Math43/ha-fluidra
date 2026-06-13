@@ -17,5 +17,18 @@
     "abort": {
       "already_configured": "Fluidra is already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fluidra options",
+        "data": {
+          "scan_interval": "Refresh interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll the Fluidra API (60–3600 s). Default: 600 s."
+        }
+      }
+    }
   }
 }

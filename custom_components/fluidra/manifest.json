@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "documentation": "https://github.com/Math43/ha-fluidra",
   "issue_tracker": "https://github.com/Math43/ha-fluidra/issues",
-  "requirements": ["boto3>=1.38.0"],
+  "requirements": [],
   "config_flow": true,
   "iot_class": "cloud_polling",
   "codeowners": ["@Math43"],
