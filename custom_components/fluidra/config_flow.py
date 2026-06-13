@@ -35,7 +35,16 @@ class FluidraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title="Fluidra", data=user_input)
+                # Persist resolved IDs so the integration never has to call
+                # /users/me/pools or /devices again (1 request per poll instead of 3).
+                return self.async_create_entry(
+                    title="Fluidra",
+                    data={
+                        **user_input,
+                        "pool_id": client.pool_id,
+                        "device_id": client.device_id,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",

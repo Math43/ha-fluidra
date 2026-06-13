@@ -8,21 +8,31 @@ PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    # Rate-limit deadline shared across coordinator recreations (setup retries,
+    # reloads) so we don't keep hitting the API while we're being throttled.
+    shared_state = domain_data.setdefault("_shared", {})
+
     coordinator = FluidraCoordinator(
         hass,
-        username=entry.data["username"],
-        password=entry.data["password"],
+        entry,
         scan_interval=entry.options.get("scan_interval", SCAN_INTERVAL),
+        shared_state=shared_state,
     )
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
-async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    # Only reload when the polling interval actually changed; writing resolved
+    # device IDs back to entry.data also fires this listener and must not reload.
+    coordinator: FluidraCoordinator = hass.data[DOMAIN][entry.entry_id]
+    new_interval = entry.options.get("scan_interval", SCAN_INTERVAL)
+    if new_interval != coordinator.scan_interval:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

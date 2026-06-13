@@ -37,7 +37,9 @@ class FluidraClient:
     """Async client for the Fluidra EMEA API."""
 
     def __init__(self, username: str, password: str, client_id: str,
-                 region: str = "eu-west-1", session: aiohttp.ClientSession = None):
+                 region: str = "eu-west-1", session: aiohttp.ClientSession = None,
+                 pool_id: str = None, device_id: str = None,
+                 shared_state: dict = None):
         self._username = username
         self._password = password
         self._client_id = client_id
@@ -49,10 +51,13 @@ class FluidraClient:
         self._access_token: str = None
         self._refresh_token: str = None
         self._token_expiry: datetime = None
-        self._rate_limited_until: datetime = None
 
-        self._pool_id: str = None
-        self._device_id: str = None
+        # Rate-limit deadline lives in a shared dict so it survives across
+        # coordinator/client recreation (HA recreates both on every setup retry).
+        self._shared = shared_state if shared_state is not None else {}
+
+        self._pool_id: str = pool_id
+        self._device_id: str = device_id
 
     # ── Properties ───────────────────────────────────────────────────────────
 
@@ -133,11 +138,12 @@ class FluidraClient:
     # ── API ───────────────────────────────────────────────────────────────────
 
     async def _get(self, path: str) -> dict | list:
-        # Bail early if still within a rate-limit window
-        if self._rate_limited_until and datetime.now() < self._rate_limited_until:
-            remaining = int((self._rate_limited_until - datetime.now()).total_seconds())
+        # Bail early if still within a rate-limit window (shared across recreations)
+        rate_limited_until = self._shared.get("rate_limited_until")
+        if rate_limited_until and datetime.now() < rate_limited_until:
+            remaining = int((rate_limited_until - datetime.now()).total_seconds())
             raise FluidraRateLimitError(
-                f"Rate limited until {self._rate_limited_until.isoformat()}",
+                f"Rate limited until {rate_limited_until.isoformat()}",
                 retry_after=remaining,
             )
 
@@ -153,7 +159,7 @@ class FluidraClient:
                     timeout=_REQUEST_TIMEOUT,
                 ) as resp:
                     if resp.status == 200:
-                        self._rate_limited_until = None
+                        self._shared["rate_limited_until"] = None
                         return await resp.json()
 
                     if resp.status == 401:
@@ -164,7 +170,7 @@ class FluidraClient:
 
                     if resp.status == 429:
                         retry_after = int(resp.headers.get("Retry-After", 60))
-                        self._rate_limited_until = datetime.now() + timedelta(seconds=retry_after)
+                        self._shared["rate_limited_until"] = datetime.now() + timedelta(seconds=retry_after)
                         raise FluidraRateLimitError(f"Rate limited on {path}", retry_after=retry_after)
 
                     if resp.status in (500, 502, 503, 504):
