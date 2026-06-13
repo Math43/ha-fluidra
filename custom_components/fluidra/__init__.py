@@ -19,7 +19,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scan_interval=entry.options.get("scan_interval", SCAN_INTERVAL),
         shared_state=shared_state,
     )
-    await coordinator.async_config_entry_first_refresh()
+
+    if entry.data.get("device_id"):
+        # Device IDs are known, so entities can be built without a successful
+        # first poll. Tolerate a rate-limited/failed start and self-heal at the
+        # next interval instead of blocking setup and retrying aggressively.
+        await coordinator.async_refresh()
+    else:
+        # No persisted device_id yet — we need one successful poll to build
+        # stable entity unique_ids, so block setup until it succeeds.
+        await coordinator.async_config_entry_first_refresh()
+
     domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

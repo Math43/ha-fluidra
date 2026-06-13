@@ -4,7 +4,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import COGNITO_CLIENT_ID, COGNITO_REGION, DOMAIN, SCAN_INTERVAL
-from .fluidra_client import FluidraAPIError, FluidraAuthError, FluidraClient
+from .fluidra_client import (
+    FluidraAPIError,
+    FluidraAuthError,
+    FluidraClient,
+    FluidraRateLimitError,
+)
 
 
 class FluidraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,6 +35,8 @@ class FluidraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.get_chlorinator_data()
             except FluidraAuthError:
                 errors["base"] = "invalid_auth"
+            except FluidraRateLimitError:
+                errors["base"] = "rate_limited"
             except FluidraAPIError:
                 errors["base"] = "cannot_connect"
             except Exception:

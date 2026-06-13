@@ -12,6 +12,7 @@
     "error": {
       "invalid_auth": "Invalid email or password",
       "cannot_connect": "Cannot connect to Fluidra API",
+      "rate_limited": "Fluidra API is rate-limiting requests. Wait a few minutes (close the Fluidra mobile app too) and try again.",
       "unknown": "Unexpected error"
     },
     "abort": {
