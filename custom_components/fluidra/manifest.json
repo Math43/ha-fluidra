@@ -1,7 +1,7 @@
 {
   "domain": "fluidra",
   "name": "Fluidra",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "documentation": "https://github.com/Math43/ha-fluidra",
   "issue_tracker": "https://github.com/Math43/ha-fluidra/issues",
   "requirements": [],
